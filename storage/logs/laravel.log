@@ -1,0 +1,4 @@
+[2025-10-27 06:24:38] local.ERROR: Cannot declare class CreateProfilesTable, because the name is already in use {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Cannot declare class CreateProfilesTable, because the name is already in use at D:\\Sertifikasi tugas 1\\sewa_drone_sertifikasi\\database\\migrations\\2023_01_01_create_profiles_table.php:7)
+[stacktrace]
+#0 {main}
+"} 

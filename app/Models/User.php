@@ -21,28 +21,36 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'phone',
+        'address',
+        'avatar',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_admin' => 'boolean',
+    ];
+    public function getAvatarUrlAttribute()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return 'https://via.placeholder.com/200x150?text=Avatar';
     }
+    // // relationship: one profile
+    // public function profile()
+    // {
+    //     return $this->hasOne(Profile::class);
+    // }
+
+    // public function loans()
+    // {
+    //     return $this->hasMany(Loan::class);
+    // }
 }

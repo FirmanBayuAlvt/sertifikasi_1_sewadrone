@@ -34,4 +34,14 @@ class Drone extends Model
     {
         return $this->hasMany(MaintenanceLog::class);
     }
+
+    public function units()
+    {
+        return $this->hasMany(DroneUnit::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_drone');
+    }
 }

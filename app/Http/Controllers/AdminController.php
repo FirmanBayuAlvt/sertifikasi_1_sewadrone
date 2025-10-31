@@ -232,15 +232,69 @@ class AdminController extends Controller
     }
 
     // Proses pengembalian booking (hanya admin — pastikan route ada dalam group admin)
+    // public function returnBooking(Request $request, \App\Models\Booking $booking)
+    // {
+    //     if ($booking->status === 'returned') {
+    //         return back()->with('info', 'Booking sudah diproses pengembaliannya.');
+    //     }
+
+    //     DB::transaction(function () use ($booking) {
+    //         $now = Carbon::now();
+
+    //         $start = $booking->start_at ? Carbon::parse($booking->start_at) : null;
+    //         $end = $booking->end_at ? Carbon::parse($booking->end_at) : null;
+
+    //         $days = 0;
+    //         if ($start && $end) {
+    //             $days = max(1, $start->diffInDays($end));
+    //         }
+
+    //         $maxDays = 5;
+    //         $extraDays = max(0, $days - $maxDays);
+
+    //         $dailyRate = optional($booking->drone)->daily_rate ?? 0;
+    //         $finePerDayRate = 0.20; // ubah bila perlu
+    //         $fineAmount = $extraDays > 0 ? ($extraDays * $dailyRate * $finePerDayRate) : 0;
+
+    //         $booking->returned_at = $now;
+    //         $booking->fine_amount = $fineAmount;
+    //         $booking->processed_by = Auth::id();
+    //         $booking->status = 'returned';
+    //         $booking->save();
+
+    //         if ($booking->drone_unit_id) {
+    //             $unit = \App\Models\DroneUnit::find($booking->drone_unit_id);
+    //             if ($unit) {
+    //                 $unit->status = 'available';
+    //                 $unit->save();
+    //             }
+    //         }
+
+    //         if ($fineAmount > 0) {
+    //             Payment::create([
+    //                 'booking_id' => $booking->id,
+    //                 'amount' => $fineAmount,
+    //                 'method' => 'fine',
+    //                 'status' => 'unpaid',
+    //             ]);
+    //         }
+    //     });
+
+    //     return back()->with('success', 'Pengembalian diproses. Denda: Rp' . number_format($booking->fine_amount ?? 0, 0, ',', '.'));
+    // }
+
+
     public function returnBooking(Request $request, \App\Models\Booking $booking)
     {
-        if ($booking->status === 'returned') {
-            return back()->with('info', 'Booking sudah diproses pengembaliannya.');
+        // pastikan user terautentikasi dan admin
+        $user = Auth::user();
+        if (! $user || ! ($user->is_admin ?? false)) {
+            abort(403, 'Akses ditolak: hanya admin yang dapat melakukan pengembalian.');
         }
 
-        DB::transaction(function () use ($booking) {
+        // ... lanjutkan proses pengembalian seperti yang sudah Anda punya ...
+        DB::transaction(function () use ($booking, $user) {
             $now = Carbon::now();
-
             $start = $booking->start_at ? Carbon::parse($booking->start_at) : null;
             $end = $booking->end_at ? Carbon::parse($booking->end_at) : null;
 
@@ -251,27 +305,23 @@ class AdminController extends Controller
 
             $maxDays = 5;
             $extraDays = max(0, $days - $maxDays);
-
             $dailyRate = optional($booking->drone)->daily_rate ?? 0;
-            $finePerDayRate = 0.20; // ubah bila perlu
+            $finePerDayRate = 0.20;
             $fineAmount = $extraDays > 0 ? ($extraDays * $dailyRate * $finePerDayRate) : 0;
 
             $booking->returned_at = $now;
             $booking->fine_amount = $fineAmount;
-            $booking->processed_by = Auth::id();
+            $booking->processed_by = $user->id;
             $booking->status = 'returned';
             $booking->save();
 
             if ($booking->drone_unit_id) {
                 $unit = \App\Models\DroneUnit::find($booking->drone_unit_id);
-                if ($unit) {
-                    $unit->status = 'available';
-                    $unit->save();
-                }
+                if ($unit) $unit->update(['status' => 'available']);
             }
 
             if ($fineAmount > 0) {
-                Payment::create([
+                \App\Models\Payment::create([
                     'booking_id' => $booking->id,
                     'amount' => $fineAmount,
                     'method' => 'fine',

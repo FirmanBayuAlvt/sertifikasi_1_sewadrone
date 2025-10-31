@@ -7,13 +7,10 @@ use Illuminate\Http\Request;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next)
     {
+        // pastikan ada user dan kolom is_admin di tabel users
         if (! auth()->check() || ! (auth()->user()->is_admin ?? false)) {
-            // 403 — jangan redirect ke login
             abort(403, 'Akses ditolak: Anda bukan admin.');
         }
 

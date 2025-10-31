@@ -3,12 +3,14 @@
 @section('content')
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Daftar Booking</h3>
+            <h3 class="mb-0">Daftar Booking (Admin)</h3>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.bookings.print', request()->query()) }}" target="_blank"
-                    class="btn btn-outline-primary btn-sm">
-                    Print
-                </a>
+                @if (Route::has('admin.bookings.print'))
+                    <a href="{{ route('admin.bookings.print', request()->query() ?: []) }}" target="_blank"
+                        class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-printer"></i> Print
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -56,21 +58,22 @@
                             <tr>
                                 <td>{{ $loop->iteration + ($bookings->currentPage() - 1) * $bookings->perPage() }}</td>
                                 <td style="min-width:180px;">
-                                    {{ $b->user->name ?? '-' }}<br>
-                                    <small class="text-muted">{{ $b->user->email ?? '' }}</small>
+                                    {{ optional($b->user)->name ?? '-' }}<br>
+                                    <small class="text-muted">{{ optional($b->user)->email ?? '' }}</small>
                                     @if (optional($b->user)->id)
                                         <div class="small text-muted">ID: {{ $b->user->id }}</div>
                                     @endif
                                 </td>
                                 <td style="min-width:160px;">
-                                    {{ $b->drone->model ?? '—' }}<br>
-                                    <small class="text-muted">{{ $b->drone->serial_no ?? '' }}</small>
+                                    {{ optional($b->drone)->model ?? '—' }}<br><small
+                                        class="text-muted">{{ optional($b->drone)->serial_no ?? '' }}</small>
                                 </td>
                                 <td>{{ $b->duration_hours ?? '-' }} jam</td>
                                 <td>Rp{{ number_format($b->price ?? 0, 0, ',', '.') }}</td>
                                 <td>
                                     @php
-                                        $badgeClass = match ($b->status) {
+                                        $s = $b->status ?? 'unknown';
+                                        $badge = match ($s) {
                                             'pending' => 'bg-warning text-dark',
                                             'confirmed' => 'bg-success',
                                             'completed' => 'bg-primary',
@@ -79,7 +82,7 @@
                                             default => 'bg-secondary',
                                         };
                                     @endphp
-                                    <span class="badge {{ $badgeClass }}">{{ ucfirst($b->status) }}</span>
+                                    <span class="badge {{ $badge }}">{{ ucfirst($s) }}</span>
                                     @if (!empty($b->fine_amount) && $b->fine_amount > 0)
                                         <div class="small text-danger mt-1">Denda:
                                             Rp{{ number_format($b->fine_amount, 0, ',', '.') }}</div>
@@ -90,28 +93,37 @@
                                     <div class="text-muted small">{{ optional($b->end_at)->format('Y-m-d H:i') ?? '-' }}
                                     </div>
                                 </td>
-                                <td class="text-muted small">{{ optional($b->created_at)->format('Y-m-d H:i') }}</td>
+                                <td class="text-muted small">{{ optional($b->created_at)->format('Y-m-d H:i') ?? '-' }}
+                                </td>
 
                                 <td style="white-space:nowrap;">
-                                    {{-- View detail (buat route admin.bookings.show jika belum ada) --}}
-                                    <a href="{{ route('admin.bookings.show', $b) }}"
-                                        class="btn btn-sm btn-outline-primary mb-1">View</a>
-
-                                    {{-- Hanya tampilkan tombol return untuk admin dan bila status belum 'returned' --}}
-                                    @if (auth()->check() && (auth()->user()->is_admin ?? false) && $b->status !== 'returned')
-                                        <form action="{{ route('admin.bookings.return', $b) }}" method="POST"
-                                            style="display:inline;">
-                                            @csrf
-                                            {{-- gunakan konfirmasi JS kecil --}}
-                                            <button type="submit" class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('Proses pengembalian booking #{{ $b->id }}? Ini akan menandai unit tersedia kembali dan menghitung denda jika ada.')">Proses
-                                                Pengembalian</button>
-                                        </form>
+                                    @if (Route::has('admin.bookings.show'))
+                                        <a href="{{ route('admin.bookings.show', $b) }}"
+                                            class="btn btn-sm btn-outline-primary mb-1">View</a>
                                     @endif
 
-                                    {{-- Tombol cetak nota/receipt --}}
-                                    <a href="{{ route('admin.bookings.print', array_merge(request()->query(), ['booking_id' => $b->id])) }}"
-                                        target="_blank" class="btn btn-sm btn-outline-secondary mt-1">Cetak</a>
+                                    {{-- Tampilkan tombol return jika route ada, user login admin, dan belum returned --}}
+                                    @if (Route::has('admin.bookings.return') && auth()->check() && (auth()->user()->is_admin ?? false))
+                                        @if ($b->status !== 'returned')
+                                            <form action="{{ route('admin.bookings.return', $b) }}" method="POST"
+                                                style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-success"
+                                                    onclick="return confirm('Proses pengembalian booking #{{ $b->id }}?')">Proses
+                                                    Pengembalian</button>
+                                            </form>
+                                        @else
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>Sudah
+                                                Dikembalikan</button>
+                                        @endif
+                                    @else
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>Hubungi admin</button>
+                                    @endif
+
+                                    @if (Route::has('admin.bookings.print'))
+                                        <a href="{{ route('admin.bookings.print', array_merge(request()->query() ?: [], ['booking_id' => $b->id])) }}"
+                                            target="_blank" class="btn btn-sm btn-outline-secondary mt-1">Cetak</a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

@@ -80,11 +80,16 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/drones/{drone}/units', [AdminController::class, 'unitsStore'])->name('admin.drones.units.store');
     Route::delete('/units/{unit}', [AdminController::class, 'unitsDestroy'])->name('admin.units.destroy');
     // di dalam group admin (pastikan admin middleware ada)
+    // Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])
+    //     ->name('admin.bookings.return')
+    //     ->middleware('admin');
     Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])
-        ->name('admin.bookings.return')
-        ->middleware('admin');
+    ->name('admin.bookings.return')
+    ->middleware('auth');
     Route::get('admin/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show')->middleware(['auth', 'admin']);
     Route::post('admin/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return')->middleware(['auth', 'admin']);
+    Route::get('/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show');
+    Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return');
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -93,6 +98,8 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('categories', CategoryController::class)->names('admin.categories');
 });
+
+
     // {
     //     $bookingConfig = Booking::getBookingConfig();
 

@@ -332,4 +332,17 @@ class AdminController extends Controller
 
         return back()->with('success', 'Pengembalian diproses. Denda: Rp' . number_format($booking->fine_amount ?? 0, 0, ',', '.'));
     }
+    public function bookingShow(Booking $booking)
+    {
+        // pastikan relasi 'drone' dan 'user' dimuat
+        $booking->load(['drone', 'user', 'droneUnit']);
+
+        return view('admin.bookings.show', [
+            'booking' => $booking,
+        ]);
+    }
+
+    /**
+     * Proses pengembalian booking (sudah anda punya — pastikan public)
+     */
 }

@@ -180,4 +180,9 @@ class BookingController extends Controller
         $bookings = Booking::where('user_id', Auth::id())->orderBy('start_at', 'desc')->paginate(10);
         return view('bookings.my', compact('bookings'));
     }
+    public function show($id)
+    {
+        $booking = \App\Models\Booking::with(['drone', 'user'])->findOrFail($id);
+        return view('bookings.show', compact('booking'));
+    }
 }

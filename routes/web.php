@@ -84,10 +84,14 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     //     ->name('admin.bookings.return')
     //     ->middleware('admin');
     Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])
-    ->name('admin.bookings.return')
-    ->middleware('auth');
-    Route::get('admin/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show')->middleware(['auth', 'admin']);
-    Route::post('admin/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return')->middleware(['auth', 'admin']);
+        ->name('admin.bookings.return')
+        ->middleware('auth');
+    // Route::get('admin/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show')->middleware(['auth', 'admin']);
+    // Route::post('admin/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return')->middleware(['auth', 'admin']);
+    // Route::get('/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show');
+    // Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return');
+    Route::get('/bookings', [AdminController::class, 'bookingsIndex'])->name('admin.bookings.index');
+    Route::get('/bookings/print', [AdminController::class, 'bookingsPrint'])->name('admin.bookings.print');
     Route::get('/bookings/{booking}', [AdminController::class, 'bookingShow'])->name('admin.bookings.show');
     Route::post('/bookings/{booking}/return', [AdminController::class, 'returnBooking'])->name('admin.bookings.return');
 });
@@ -98,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::resource('categories', CategoryController::class)->names('admin.categories');
 });
+Route::resource('bookings', App\Http\Controllers\BookingController::class);
 
 
     // {
